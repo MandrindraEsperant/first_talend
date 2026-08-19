@@ -118,6 +118,12 @@ public class first_job implements TalendJob {
 
 		public void synchronizeContext() {
 
+			if (dossier_sortie != null) {
+
+				this.setProperty("dossier_sortie", dossier_sortie.toString());
+
+			}
+
 		}
 
 		// if the stored or passed value is "<TALEND_NULL>" string, it mean null
@@ -129,6 +135,11 @@ public class first_job implements TalendJob {
 			return origin_value;
 		}
 
+		public String dossier_sortie;
+
+		public String getDossier_sortie() {
+			return this.dossier_sortie;
+		}
 	}
 
 	protected ContextProperties context = new ContextProperties(); // will be instanciated by MS.
@@ -1434,8 +1445,8 @@ public class first_job implements TalendJob {
 				int tos_count_tFileOutputDelimited_2 = 0;
 
 				String fileName_tFileOutputDelimited_2 = "";
-				fileName_tFileOutputDelimited_2 = (new java.io.File("D:/Training/Talend/clients_antananarivo.csv"))
-						.getAbsolutePath().replace("\\", "/");
+				fileName_tFileOutputDelimited_2 = (new java.io.File(
+						context.dossier_sortie + "clients_antananarivo.csv")).getAbsolutePath().replace("\\", "/");
 				String fullName_tFileOutputDelimited_2 = null;
 				String extension_tFileOutputDelimited_2 = null;
 				String directory_tFileOutputDelimited_2 = null;
@@ -1468,9 +1479,7 @@ public class first_job implements TalendJob {
 				java.io.File filetFileOutputDelimited_2 = new java.io.File(fileName_tFileOutputDelimited_2);
 				globalMap.put("tFileOutputDelimited_2_FILE_NAME", fileName_tFileOutputDelimited_2);
 				if (filetFileOutputDelimited_2.exists()) {
-					throw new RuntimeException("The particular file \"" + filetFileOutputDelimited_2.getAbsoluteFile()
-							+ "\" already exist. If you want to overwrite the file, please uncheck the"
-							+ " \"Throw an error if the file already exist\" option in Advanced settings.");
+					isFileGenerated_tFileOutputDelimited_2 = false;
 				}
 				int nb_line_tFileOutputDelimited_2 = 0;
 				int splitedFileNo_tFileOutputDelimited_2 = 0;
@@ -1498,12 +1507,8 @@ public class first_job implements TalendJob {
 				// routines.system.Row
 				java.io.Writer outtFileOutputDelimited_2 = null;
 
-				java.io.File fileToDelete_tFileOutputDelimited_2 = new java.io.File(fileName_tFileOutputDelimited_2);
-				if (fileToDelete_tFileOutputDelimited_2.exists()) {
-					fileToDelete_tFileOutputDelimited_2.delete();
-				}
 				outtFileOutputDelimited_2 = new java.io.BufferedWriter(new java.io.OutputStreamWriter(
-						new java.io.FileOutputStream(fileName_tFileOutputDelimited_2, false), "ISO-8859-15"));
+						new java.io.FileOutputStream(fileName_tFileOutputDelimited_2, true), "ISO-8859-15"));
 				if (filetFileOutputDelimited_2.length() == 0) {
 					outtFileOutputDelimited_2.write("id");
 					outtFileOutputDelimited_2.write(OUT_DELIM_tFileOutputDelimited_2);
@@ -1783,33 +1788,141 @@ public class first_job implements TalendJob {
 				final routines.system.RowState rowstate_tFileInputDelimited_2 = new routines.system.RowState();
 
 				int nb_line_tFileInputDelimited_2 = 0;
-				org.talend.fileprocess.FileInputDelimited fid_tFileInputDelimited_2 = null;
-				int limit_tFileInputDelimited_2 = -1;
+				int footer_tFileInputDelimited_2 = 0;
+				int totalLinetFileInputDelimited_2 = 0;
+				int limittFileInputDelimited_2 = -1;
+				int lastLinetFileInputDelimited_2 = -1;
+
+				char fieldSeparator_tFileInputDelimited_2[] = null;
+
+				// support passing value (property: Field Separator) by 'context.fs' or
+				// 'globalMap.get("fs")'.
+				if (((String) ";").length() > 0) {
+					fieldSeparator_tFileInputDelimited_2 = ((String) ";").toCharArray();
+				} else {
+					throw new IllegalArgumentException("Field Separator must be assigned a char.");
+				}
+
+				char rowSeparator_tFileInputDelimited_2[] = null;
+
+				// support passing value (property: Row Separator) by 'context.rs' or
+				// 'globalMap.get("rs")'.
+				if (((String) "\n").length() > 0) {
+					rowSeparator_tFileInputDelimited_2 = ((String) "\n").toCharArray();
+				} else {
+					throw new IllegalArgumentException("Row Separator must be assigned a char.");
+				}
+
+				Object filename_tFileInputDelimited_2 = /** Start field tFileInputDelimited_2:FILENAME */
+						"D:/Training/Talend/cli.csv"/** End field tFileInputDelimited_2:FILENAME */
+				;
+				com.talend.csv.CSVReader csvReadertFileInputDelimited_2 = null;
+
 				try {
 
-					Object filename_tFileInputDelimited_2 = "D:/Training/Talend/cli.csv";
-					if (filename_tFileInputDelimited_2 instanceof java.io.InputStream) {
+					String[] rowtFileInputDelimited_2 = null;
+					int currentLinetFileInputDelimited_2 = 0;
+					int outputLinetFileInputDelimited_2 = 0;
+					try {// TD110 begin
+						if (filename_tFileInputDelimited_2 instanceof java.io.InputStream) {
 
-						int footer_value_tFileInputDelimited_2 = 0, random_value_tFileInputDelimited_2 = -1;
-						if (footer_value_tFileInputDelimited_2 > 0 || random_value_tFileInputDelimited_2 > 0) {
-							throw new java.lang.Exception(
-									"When the input source is a stream,footer and random shouldn't be bigger than 0.");
+							int footer_value_tFileInputDelimited_2 = 0;
+							if (footer_value_tFileInputDelimited_2 > 0) {
+								throw new java.lang.Exception(
+										"When the input source is a stream,footer shouldn't be bigger than 0.");
+							}
+
+							csvReadertFileInputDelimited_2 = new com.talend.csv.CSVReader(
+									(java.io.InputStream) filename_tFileInputDelimited_2,
+									fieldSeparator_tFileInputDelimited_2[0], "US-ASCII");
+						} else {
+							csvReadertFileInputDelimited_2 = new com.talend.csv.CSVReader(
+									String.valueOf(filename_tFileInputDelimited_2),
+									fieldSeparator_tFileInputDelimited_2[0], "US-ASCII");
 						}
 
-					}
-					try {
-						fid_tFileInputDelimited_2 = new org.talend.fileprocess.FileInputDelimited(
-								"D:/Training/Talend/cli.csv", "ISO-8859-15", ";", "\n", true, 1, 0,
-								limit_tFileInputDelimited_2, -1, false);
+						csvReadertFileInputDelimited_2.setTrimWhitespace(false);
+						if ((rowSeparator_tFileInputDelimited_2[0] != '\n')
+								&& (rowSeparator_tFileInputDelimited_2[0] != '\r'))
+							csvReadertFileInputDelimited_2.setLineEnd("" + rowSeparator_tFileInputDelimited_2[0]);
+
+						csvReadertFileInputDelimited_2.setQuoteChar('"');
+
+						csvReadertFileInputDelimited_2.setEscapeChar(csvReadertFileInputDelimited_2.getQuoteChar());
+
+						if (footer_tFileInputDelimited_2 > 0) {
+							for (totalLinetFileInputDelimited_2 = 0; totalLinetFileInputDelimited_2 < 1; totalLinetFileInputDelimited_2++) {
+								csvReadertFileInputDelimited_2.readNext();
+							}
+							csvReadertFileInputDelimited_2.setSkipEmptyRecords(false);
+							while (csvReadertFileInputDelimited_2.readNext()) {
+
+								totalLinetFileInputDelimited_2++;
+
+							}
+							int lastLineTemptFileInputDelimited_2 = totalLinetFileInputDelimited_2
+									- footer_tFileInputDelimited_2 < 0 ? 0
+											: totalLinetFileInputDelimited_2 - footer_tFileInputDelimited_2;
+							if (lastLinetFileInputDelimited_2 > 0) {
+								lastLinetFileInputDelimited_2 = lastLinetFileInputDelimited_2 < lastLineTemptFileInputDelimited_2
+										? lastLinetFileInputDelimited_2
+										: lastLineTemptFileInputDelimited_2;
+							} else {
+								lastLinetFileInputDelimited_2 = lastLineTemptFileInputDelimited_2;
+							}
+
+							csvReadertFileInputDelimited_2.close();
+							if (filename_tFileInputDelimited_2 instanceof java.io.InputStream) {
+								csvReadertFileInputDelimited_2 = new com.talend.csv.CSVReader(
+										(java.io.InputStream) filename_tFileInputDelimited_2,
+										fieldSeparator_tFileInputDelimited_2[0], "US-ASCII");
+							} else {
+								csvReadertFileInputDelimited_2 = new com.talend.csv.CSVReader(
+										String.valueOf(filename_tFileInputDelimited_2),
+										fieldSeparator_tFileInputDelimited_2[0], "US-ASCII");
+							}
+							csvReadertFileInputDelimited_2.setTrimWhitespace(false);
+							if ((rowSeparator_tFileInputDelimited_2[0] != '\n')
+									&& (rowSeparator_tFileInputDelimited_2[0] != '\r'))
+								csvReadertFileInputDelimited_2.setLineEnd("" + rowSeparator_tFileInputDelimited_2[0]);
+
+							csvReadertFileInputDelimited_2.setQuoteChar('"');
+
+							csvReadertFileInputDelimited_2.setEscapeChar(csvReadertFileInputDelimited_2.getQuoteChar());
+
+						}
+
+						if (limittFileInputDelimited_2 != 0) {
+							for (currentLinetFileInputDelimited_2 = 0; currentLinetFileInputDelimited_2 < 1; currentLinetFileInputDelimited_2++) {
+								csvReadertFileInputDelimited_2.readNext();
+							}
+						}
+						csvReadertFileInputDelimited_2.setSkipEmptyRecords(false);
+
 					} catch (java.lang.Exception e) {
 						globalMap.put("tFileInputDelimited_2_ERROR_MESSAGE", e.getMessage());
 
 						System.err.println(e.getMessage());
 
-					}
+					} // TD110 end
 
-					while (fid_tFileInputDelimited_2 != null && fid_tFileInputDelimited_2.nextRecord()) {
+					while (limittFileInputDelimited_2 != 0 && csvReadertFileInputDelimited_2 != null
+							&& csvReadertFileInputDelimited_2.readNext()) {
 						rowstate_tFileInputDelimited_2.reset();
+
+						rowtFileInputDelimited_2 = csvReadertFileInputDelimited_2.getValues();
+
+						currentLinetFileInputDelimited_2++;
+
+						if (lastLinetFileInputDelimited_2 > -1
+								&& currentLinetFileInputDelimited_2 > lastLinetFileInputDelimited_2) {
+							break;
+						}
+						outputLinetFileInputDelimited_2++;
+						if (limittFileInputDelimited_2 > 0
+								&& outputLinetFileInputDelimited_2 > limittFileInputDelimited_2) {
+							break;
+						}
 
 						row1 = null;
 
@@ -1817,40 +1930,89 @@ public class first_job implements TalendJob {
 						row1 = new row1Struct();
 						try {
 
-							int columnIndexWithD_tFileInputDelimited_2 = 0;
-
-							String temp = "";
-
-							columnIndexWithD_tFileInputDelimited_2 = 0;
-
-							temp = fid_tFileInputDelimited_2.get(columnIndexWithD_tFileInputDelimited_2);
-							if (temp.length() > 0) {
-
-								try {
-
-									row1.id = ParserUtils.parseTo_Integer(temp);
-
-								} catch (java.lang.Exception ex_tFileInputDelimited_2) {
-									globalMap.put("tFileInputDelimited_2_ERROR_MESSAGE",
-											ex_tFileInputDelimited_2.getMessage());
-									rowstate_tFileInputDelimited_2.setException(new RuntimeException(String.format(
-											"Couldn't parse value for column '%s' in '%s', value is '%s'. Details: %s",
-											"id", "row1", temp, ex_tFileInputDelimited_2), ex_tFileInputDelimited_2));
-								}
-
+							char fieldSeparator_tFileInputDelimited_2_ListType[] = null;
+							// support passing value (property: Field Separator) by 'context.fs' or
+							// 'globalMap.get("fs")'.
+							if (((String) ";").length() > 0) {
+								fieldSeparator_tFileInputDelimited_2_ListType = ((String) ";").toCharArray();
 							} else {
+								throw new IllegalArgumentException("Field Separator must be assigned a char.");
+							}
+							if (rowtFileInputDelimited_2.length == 1 && ("\015").equals(rowtFileInputDelimited_2[0])) {// empty
+																														// line
+																														// when
+																														// row
+																														// separator
+																														// is
+																														// '\n'
 
 								row1.id = null;
 
+								row1.nom = null;
+
+								row1.ville = null;
+
+							} else {
+
+								int columnIndexWithD_tFileInputDelimited_2 = 0; // Column Index
+
+								columnIndexWithD_tFileInputDelimited_2 = 0;
+
+								if (columnIndexWithD_tFileInputDelimited_2 < rowtFileInputDelimited_2.length) {
+
+									if (rowtFileInputDelimited_2[columnIndexWithD_tFileInputDelimited_2].length() > 0) {
+										try {
+
+											row1.id = ParserUtils.parseTo_Integer(
+													rowtFileInputDelimited_2[columnIndexWithD_tFileInputDelimited_2]);
+
+										} catch (java.lang.Exception ex_tFileInputDelimited_2) {
+											globalMap.put("tFileInputDelimited_2_ERROR_MESSAGE",
+													ex_tFileInputDelimited_2.getMessage());
+											rowstate_tFileInputDelimited_2.setException(new RuntimeException(String
+													.format("Couldn't parse value for column '%s' in '%s', value is '%s'. Details: %s",
+															"id", "row1",
+															rowtFileInputDelimited_2[columnIndexWithD_tFileInputDelimited_2],
+															ex_tFileInputDelimited_2),
+													ex_tFileInputDelimited_2));
+										}
+									} else {
+
+										row1.id = null;
+
+									}
+
+								} else {
+
+									row1.id = null;
+
+								}
+
+								columnIndexWithD_tFileInputDelimited_2 = 1;
+
+								if (columnIndexWithD_tFileInputDelimited_2 < rowtFileInputDelimited_2.length) {
+
+									row1.nom = rowtFileInputDelimited_2[columnIndexWithD_tFileInputDelimited_2];
+
+								} else {
+
+									row1.nom = null;
+
+								}
+
+								columnIndexWithD_tFileInputDelimited_2 = 2;
+
+								if (columnIndexWithD_tFileInputDelimited_2 < rowtFileInputDelimited_2.length) {
+
+									row1.ville = rowtFileInputDelimited_2[columnIndexWithD_tFileInputDelimited_2];
+
+								} else {
+
+									row1.ville = null;
+
+								}
+
 							}
-
-							columnIndexWithD_tFileInputDelimited_2 = 1;
-
-							row1.nom = fid_tFileInputDelimited_2.get(columnIndexWithD_tFileInputDelimited_2);
-
-							columnIndexWithD_tFileInputDelimited_2 = 2;
-
-							row1.ville = fid_tFileInputDelimited_2.get(columnIndexWithD_tFileInputDelimited_2);
 
 							if (rowstate_tFileInputDelimited_2.getException() != null) {
 								throw rowstate_tFileInputDelimited_2.getException();
@@ -1862,6 +2024,8 @@ public class first_job implements TalendJob {
 
 							System.err.println(e.getMessage());
 							row1 = null;
+
+							globalMap.put("tFileInputDelimited_2_ERROR_MESSAGE", e.getMessage());
 
 						}
 
@@ -1929,7 +2093,7 @@ public class first_job implements TalendJob {
 
 // # Output table : 'clients'
 								clients_tmp.id = row1.id;
-								clients_tmp.nom = "nom = " + row1.nom.toUpperCase();
+								clients_tmp.nom = row1.nom.toUpperCase();
 								clients_tmp.ville = row1.ville;
 								clients = clients_tmp;
 // ###############################
@@ -2195,17 +2359,19 @@ public class first_job implements TalendJob {
 
 						currentComponent = "tFileInputDelimited_2";
 
+						nb_line_tFileInputDelimited_2++;
 					}
+
 				} finally {
-					if (!((Object) ("D:/Training/Talend/cli.csv") instanceof java.io.InputStream)) {
-						if (fid_tFileInputDelimited_2 != null) {
-							fid_tFileInputDelimited_2.close();
+					if (!(filename_tFileInputDelimited_2 instanceof java.io.InputStream)) {
+						if (csvReadertFileInputDelimited_2 != null) {
+							csvReadertFileInputDelimited_2.close();
 						}
 					}
-					if (fid_tFileInputDelimited_2 != null) {
-						globalMap.put("tFileInputDelimited_2_NB_LINE", fid_tFileInputDelimited_2.getRowNumber());
-
+					if (csvReadertFileInputDelimited_2 != null) {
+						globalMap.put("tFileInputDelimited_2_NB_LINE", nb_line_tFileInputDelimited_2);
 					}
+
 				}
 
 				ok_Hash.put("tFileInputDelimited_2", true);
@@ -2418,7 +2584,7 @@ public class first_job implements TalendJob {
 	public int portTraces = 4334;
 	public String clientHost;
 	public String defaultClientHost = "localhost";
-	public String contextStr = "Default";
+	public String contextStr = "test";
 	public boolean isDefaultContext = true;
 	public String pid = "0";
 	public String rootPid = null;
@@ -2558,6 +2724,12 @@ public class first_job implements TalendJob {
 			}
 			class ContextProcessing {
 				private void processContext_0() {
+					context.setContextType("dossier_sortie", "id_String");
+					if (context.getStringValue("dossier_sortie") == null) {
+						context.dossier_sortie = null;
+					} else {
+						context.dossier_sortie = (String) context.getProperty("dossier_sortie");
+					}
 				}
 
 				public void processAllContext() {
@@ -2573,6 +2745,9 @@ public class first_job implements TalendJob {
 
 		// get context value from parent directly
 		if (parentContextMap != null && !parentContextMap.isEmpty()) {
+			if (parentContextMap.containsKey("dossier_sortie")) {
+				context.dossier_sortie = (String) parentContextMap.get("dossier_sortie");
+			}
 		}
 
 		// Resume: init the resumeUtil
@@ -2773,6 +2948,6 @@ public class first_job implements TalendJob {
 	ResumeUtil resumeUtil = null;
 }
 /************************************************************************************************
- * 83288 characters generated by Talend Open Studio for Data Integration on the
- * 19 août 2026 à 11:01:22 EAT
+ * 89951 characters generated by Talend Open Studio for Data Integration on the
+ * 19 août 2026 à 11:54:08 EAT
  ************************************************************************************************/
