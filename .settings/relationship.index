@@ -17,4 +17,15 @@
     "version" : "Latest",
     "type" : "schema"
   } ]
+}, {
+  "baseItem" : {
+    "id" : "_oJc2EJu7EfGgUqtjPZecDQ",
+    "version" : "0.1",
+    "type" : "job"
+  },
+  "relatedItems" : [ {
+    "id" : "_PtPtQJu4EfGgUqtjPZecDQ",
+    "version" : "Latest",
+    "type" : "property"
+  } ]
 } ]
